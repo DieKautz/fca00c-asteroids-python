@@ -3,7 +3,7 @@ import numpy as np
 
 from operations import *
 
-version = "1.4.3"
+version = "1.5.0"
 
 pygame.init()
 d_width = 1200
@@ -17,7 +17,7 @@ camera_follow = True
 small_grid = False
 
 pygame.font.init()
-comic_sans_font = pygame.font.SysFont(None, 30)
+font = pygame.font.SysFont(None, 30)
 screen = pygame.display.set_mode((d_width, d_height))
 pygame.display.set_caption("FCA00C - Asteroid Game v" + version)
 
@@ -36,6 +36,7 @@ fuel_color = (40, 154, 24)
 background_color = (39, 125, 161)
 grid_color = (38, 12, 0)
 grid_bold_color = (200, 200, 200)
+text_color = (50, 50, 50)
 
 def chebychev_distance(x1, y1, x2, y2):
     return max(abs(x1 - x2), abs(y1 - y2))
@@ -61,7 +62,7 @@ def draw_fuel(fuel_points):
         0
     )
     pygame.draw.rect(screen, color, (0, d_height-20, d_width*percent, 20))
-    text = comic_sans_font.render(str(fuel_points), True, (0, 0, 0))
+    text = font.render(str(fuel_points), True, text_color)
     text_rect = text.get_rect(center=(d_width/2, d_height-10))
     screen.blit(text, text_rect)
 
@@ -260,8 +261,8 @@ def game_loop():
             camera_y += (camera_should_y - camera_y)/10
 
         (mouse_x, mouse_y) = pygame.mouse.get_pos()
-        mouse_x = int((mouse_x)/grid_size_px) + int(camera_x/grid_size_px)
-        mouse_y = int((mouse_y)/grid_size_px - .5) + int(camera_y/grid_size_px)
+        mouse_x = round((mouse_x + camera_x)/grid_size_px - 0.5)
+        mouse_y = round((mouse_y + camera_y)/grid_size_px - 0.5)
 
         screen.fill(background_color)
         
@@ -272,9 +273,8 @@ def game_loop():
                 draw_circle(grid_bold_color, x-0.5, y-0.5, 1)
             if small_grid:
                 draw_circle(grid_color, x, y, 1)
-        ship.draw_body()
-                
-        ship.draw_tracers()
+
+        ship.draw_body()        
         ship.draw_trail()
 
         for (x, y), t in galaxy.items():
@@ -286,14 +286,16 @@ def game_loop():
                 draw_asteroid(x, y, width=1)
             elif t == "was-fuel":
                 draw_fuel_pod(x, y, width=1)
+        ship.draw_tracers()
 
-        draw_fuel(ship.fuel)
-        draw_rect((0,0,0), mouse_x-.2, mouse_y-.2, w=grid_size_px*1.4, h=grid_size_px*1.4, width=1)
-        text_surface = comic_sans_font.render("{} {}".format((mouse_x, mouse_y), chebychev_distance(ship.x, ship.y, mouse_x, mouse_y)), True, (255, 255, 255))
+        draw_rect(text_color, mouse_x-.2, mouse_y-.2, w=grid_size_px*1.4, h=grid_size_px*1.4, width=1)
+        text_surface = font.render("{} {}".format((mouse_x, mouse_y), chebychev_distance(ship.x, ship.y, mouse_x, mouse_y)), True, text_color)
         screen.blit(text_surface, ((mouse_x+1)*grid_size_px - camera_x, (mouse_y+1)*grid_size_px - camera_y))
 
-        text_surface = comic_sans_font.render(str(ship) + " cam_lock: {}".format(camera_follow), True, (50, 50, 50))
+        text_surface = font.render(str(ship) + " cam_lock: {}".format(camera_follow), True, text_color)
         screen.blit(text_surface, (0,0))
+
+        draw_fuel(ship.fuel)
         pygame.display.flip()  
 
 if __name__ == "__main__":
