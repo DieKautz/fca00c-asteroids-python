@@ -53,6 +53,18 @@ def draw_line(color, x1, y1, x2, y2, width=1):
 def draw_lines(color, points, width=1):
     pygame.draw.aalines(screen, color, False, [(p[0]*grid_size_px+grid_size_px/2 - camera_x, p[1]*grid_size_px+grid_size_px/2 - camera_y) for p in points], width)
 
+def draw_fuel(fuel_points):
+    percent = max(0, min(1, fuel_points / 100))
+    color = (
+        int(min(255,512 * (1-percent))),
+        int(min(255, 512 * (percent))),
+        0
+    )
+    pygame.draw.rect(screen, color, (0, d_height-20, d_width*percent, 20))
+    text = comic_sans_font.render(str(fuel_points), True, (0, 0, 0))
+    text_rect = text.get_rect(center=(d_width/2, d_height-10))
+    screen.blit(text, text_rect)
+
 def draw_asteroid(x, y, width=0):
     draw_circle(asteroid_color, x, y, width=width, radius=grid_size_px/2)
 def draw_fuel_pod(x, y, width=0):
@@ -252,7 +264,6 @@ def game_loop():
         mouse_y = int((mouse_y)/grid_size_px - .5) + int(camera_y/grid_size_px)
 
         screen.fill(background_color)
-        ship.draw_body()
         
         for (x, y) in np.ndindex((int(d_width/grid_size_px)+1, int(d_height / grid_size_px)+1)):
             x += int(camera_x/grid_size_px)
@@ -261,6 +272,7 @@ def game_loop():
                 draw_circle(grid_bold_color, x-0.5, y-0.5, 1)
             if small_grid:
                 draw_circle(grid_color, x, y, 1)
+        ship.draw_body()
                 
         ship.draw_tracers()
         ship.draw_trail()
@@ -275,7 +287,8 @@ def game_loop():
             elif t == "was-fuel":
                 draw_fuel_pod(x, y, width=1)
 
-        draw_rect((255,255,255), mouse_x-.2, mouse_y-.2, w=grid_size_px*1.4, h=grid_size_px*1.4, width=1)
+        draw_fuel(ship.fuel)
+        draw_rect((0,0,0), mouse_x-.2, mouse_y-.2, w=grid_size_px*1.4, h=grid_size_px*1.4, width=1)
         text_surface = comic_sans_font.render("{} {}".format((mouse_x, mouse_y), chebychev_distance(ship.x, ship.y, mouse_x, mouse_y)), True, (255, 255, 255))
         screen.blit(text_surface, ((mouse_x+1)*grid_size_px - camera_x, (mouse_y+1)*grid_size_px - camera_y))
 
