@@ -137,8 +137,21 @@ class Ship:
         self.trail = []
         self.shots = []
     def __str__(self):
-        return "X: {} Y: {} fuel: {} score: {} move: +{} engine#: {}".format(self.x, self.y, self.fuel, self.score, self.move_length, self.call_count)
-
+        return "X: {} Y: {} move: +{}".format(self.x, self.y, self.move_length)
+    def counters(self):
+        counter = {"shoot": 0, "harvest": 0, "move": -1, "turn": 0, "upgrade": 0}
+        for op in self.operations:
+            if isinstance(op, ShootOperation):
+                counter["shoot"] += 1
+            if isinstance(op, RefuelOperation):
+                counter["harvest"] += 1
+            if isinstance(op, MoveOperation):
+                counter["move"] += 1
+            if isinstance(op, TurnOperation):
+                counter["turn"] += 1
+            if isinstance(op, UpgradeOperation):
+                counter["upgrade"] += 1
+        return counter
     def dir(self, n):
         return (self.x + self.dirx*n, self.y + self.diry*n)
     def draw_body(self):
@@ -294,6 +307,13 @@ def game_loop():
 
         text_surface = font.render(str(ship) + " cam_lock: {}".format(camera_follow), True, text_color)
         screen.blit(text_surface, (0,0))
+
+        text_surface = font.render(str(ship.counters()), True, text_color)
+        screen.blit(text_surface, (0,20))
+
+        text = font.render("{} points".format(ship.score), True, ship_color)
+        text_rect = text.get_rect(center=(d_width/2, d_height-50))
+        screen.blit(text, text_rect)
 
         draw_fuel(ship.fuel)
         pygame.display.flip()  
