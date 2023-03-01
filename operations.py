@@ -41,13 +41,11 @@ class MoveOperation:
         self.ship.x += self.dirx * self.n
         self.ship.y += self.diry * self.n
         self.ship.fuel -= self.ship.move_cost * self.n
-        self.ship.call_count += 1
     def undo(self):
         self.ship.trail.pop()
         self.ship.x -= self.dirx * self.n
         self.ship.y -= self.diry * self.n
         self.ship.fuel += self.ship.move_cost * self.n
-        self.ship.call_count -= 1
     def engine_call(self):
         return "engine.p_move(&Some({}));".format(self.n)
     def __str__(self):
@@ -69,14 +67,12 @@ class TurnOperation:
     def execute(self):
         self.ship.internal_dirx = self.dirx
         self.ship.internal_diry = self.diry
-        self.ship.call_count += 1
         self.ship.fuel -= self.ship.turn_cost
     def undo(self):
         self.ship.dirx = self.old_internal_dirx
         self.ship.diry = self.old_internal_diry
         self.ship.internal_dirx = self.old_internal_dirx
         self.ship.internal_diry = self.old_internal_diry
-        self.ship.call_count -= 1
         self.ship.fuel += self.ship.turn_cost
     def engine_call(self):
         return "engine.p_turn(&Direction::{});".format(dir_to_enum(self.dirx, self.diry))
@@ -94,7 +90,6 @@ class ShootOperation:
         self.shot_pos_y = ship.y
     def execute(self):
         self.ship.fuel -= self.ship.shoot_cost
-        self.ship.call_count += 1
         for (x, y), t in self.galaxy.items():
             if t != "asteroid":
                 continue
@@ -106,7 +101,6 @@ class ShootOperation:
             self.ship.shots.append((self.shot_pos_x, self.shot_pos_y, x, y))
     def undo(self):
         self.ship.fuel += self.ship.shoot_cost
-        self.ship.call_count -= 1
         self.ship.score -= len(self.affected_asteroids)
         for (x, y) in self.affected_asteroids:
             self.galaxy[x, y] = "asteroid"
@@ -121,10 +115,7 @@ class RefuelOperation:
         self.ship = ship
         self.galaxy = galaxy
         self.fuel = []
-        self.old_dirx = ship.dirx
-        self.old_diry = ship.diry
     def execute(self):
-        self.ship.call_count += 1
         for (x, y), t in self.galaxy.items():
             if t != "fuel":
                 continue
@@ -133,7 +124,6 @@ class RefuelOperation:
                 self.ship.fuel += 100
                 self.galaxy[x, y] = "was-fuel"
     def undo(self):
-        self.ship.call_count -= 1
         for (x, y) in self.fuel:
             self.galaxy[x, y] = "fuel"
             self.ship.fuel -= 100
@@ -145,16 +135,12 @@ class RefuelOperation:
 class UpgradeOperation:
     def __init__(self, ship):
         self.ship = ship
-        self.old_dirx = ship.dirx
-        self.old_diry = ship.diry
     def execute(self):
-        self.ship.call_count += 1
         self.ship.score -= 5
         self.ship.shoot_cost = 2
         self.ship.move_cost = 1
-        self.ship.turn_cost -= 0
+        self.ship.turn_cost = 0
     def undo(self):
-        self.ship.call_count -= 1
         self.ship.score += 5
         self.ship.shoot_cost = 5
         self.ship.move_cost = 2

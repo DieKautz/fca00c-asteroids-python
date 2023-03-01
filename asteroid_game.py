@@ -14,10 +14,12 @@ camera_x = -int(d_width / 2) + 8 * grid_size_px
 camera_y = -int(d_height / 2) + 8 * grid_size_px
 camera_follow = True
 
+helpers = False
 small_grid = False
 
 pygame.font.init()
 font = pygame.font.SysFont(None, 30)
+font_small = pygame.font.SysFont(None, 14)
 screen = pygame.display.set_mode((d_width, d_height))
 pygame.display.set_caption("FCA00C - Asteroid Game v" + version)
 
@@ -65,7 +67,7 @@ def draw_fuel(fuel_points):
     text = font.render(str(fuel_points), True, text_color)
     text_rect = text.get_rect(center=(d_width/2, d_height-10))
     screen.blit(text, text_rect)
-def draw_text_centered(text, x, y, color=text_color):
+def draw_text_centered(text, x, y, color=text_color, font=font):
     text = font.render(text, True, color)
     text_rect = text.get_rect(center=((x+1)*grid_size_px - camera_x, (y+1)*grid_size_px - camera_y))
     screen.blit(text, text_rect)
@@ -84,6 +86,9 @@ def toggle_small_grid():
 def toggle_camera_follow():
     global camera_follow
     camera_follow = not camera_follow
+def toggle_helpers():
+    global helpers
+    helpers = not helpers
 
 def camera_zoom(zoom):
     global should_grid_size_px
@@ -156,6 +161,34 @@ class Ship:
             if isinstance(op, UpgradeOperation):
                 counter["upgrade"] += 1
         return counter
+    def highlight_nearest_asteroids(self):
+        nearest = []
+        nearest_dist = 100000
+        for (x, y), t in galaxy.items():
+            if t == "asteroid":
+                dist = chebychev_distance(self.x, self.y, x, y)
+                if dist == nearest_dist:
+                    nearest.append((x,y))
+                if dist < nearest_dist:
+                    nearest = [(x,y)]
+                    nearest_dist = dist
+        for (x, y) in nearest:
+            draw_rect(asteroid_color, x-.2, y-.2, w=grid_size_px*1.4, h=grid_size_px*1.4, width=1)
+            draw_text_centered(str(nearest_dist), x-.5, y-.5, font=font_small)
+    def highlight_nearest_fuel(self):
+        nearest = []
+        nearest_dist = 100000
+        for (x, y), t in galaxy.items():
+            if t == "fuel":
+                dist = chebychev_distance(self.x, self.y, x, y)
+                if dist == nearest_dist:
+                    nearest.append((x,y))
+                if dist < nearest_dist:
+                    nearest = [(x,y)]
+                    nearest_dist = dist
+        for (x, y) in nearest:
+            draw_rect(fuel_color, x-.2, y-.2, w=grid_size_px*1.4, h=grid_size_px*1.4, width=1)
+            draw_text_centered(str(nearest_dist), x-.5, y-.5, font=font_small)
     def dir(self, n):
         return (self.x + self.dirx*n, self.y + self.diry*n)
     def draw_body(self):
@@ -233,6 +266,8 @@ class Ship:
         
         if key == pygame.K_g:
             toggle_small_grid()
+        if key == pygame.K_h:
+            toggle_helpers()
         if key == pygame.K_l:
             toggle_camera_follow()
         if key == pygame.K_p:
@@ -288,7 +323,7 @@ def game_loop():
             y += int(camera_y/grid_size_px)
             if x % 17 == 0 or y % 17 == 0:
                 draw_circle(grid_bold_color, x-0.5, y-0.5, 1)
-            if x % 17 == 8 and y % 17 == 8:
+            if helpers and x % 17 == 8 and y % 17 == 8:
                 draw_text_centered("{:.0f}, {:.0f}".format((x-8)/17, (y-8)/17), x, y, [max(50, x-50) for x in background_color])
             if small_grid:
                 draw_circle(grid_color, x, y, 1)
@@ -305,10 +340,14 @@ def game_loop():
                 draw_asteroid(x, y, width=1)
             elif t == "was-fuel":
                 draw_fuel_pod(x, y, width=1)
+
         ship.draw_tracers()
 
-        draw_rect(text_color, mouse_x-.2, mouse_y-.2, w=grid_size_px*1.4, h=grid_size_px*1.4, width=1)
-        draw_text_centered("{} {}".format((mouse_x, mouse_y), chebychev_distance(ship.x, ship.y, mouse_x, mouse_y)), mouse_x+1, mouse_y+1)
+        if helpers:
+            ship.highlight_nearest_fuel()
+            ship.highlight_nearest_asteroids()
+            draw_rect(text_color, mouse_x-.2, mouse_y-.2, w=grid_size_px*1.4, h=grid_size_px*1.4, width=1)
+            draw_text_centered("{} {}".format((mouse_x, mouse_y), chebychev_distance(ship.x, ship.y, mouse_x, mouse_y)), mouse_x+1, mouse_y+1)
 
         text_surface = font.render(str(ship) + " cam_lock: {}".format(camera_follow), True, text_color)
         screen.blit(text_surface, (0,0))
