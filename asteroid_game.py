@@ -135,13 +135,13 @@ class Ship:
         self.diry = diry
         self.internal_dirx = dirx
         self.internal_diry = diry
+        self.upgraded = False
         self.fuel = 50
         self.move_length = 1
         self.move_cost = 2
         self.turn_cost = 1
         self.shoot_cost = 5
         self.score = 0
-        self.call_count = 0
         self.operations = [MoveOperation(self, 0)]
         self.trail = []
         self.shots = []
@@ -217,6 +217,11 @@ class Ship:
             op = TurnOperation(self)
             op.execute()
             self.operations.append(op)
+    def upgrade_if_possible(self):
+        if not self.upgraded and self.score >= 5:
+            op = UpgradeOperation(self)
+            op.execute()
+            self.operations.append(op)
     def key_down(self, key):
         if key >= pygame.K_1 and key <= pygame.K_9 or key == pygame.K_SPACE:
             n = key - pygame.K_0
@@ -230,15 +235,18 @@ class Ship:
             self.maybe_turn()
             op = ShootOperation(self, galaxy)
             op.execute()
-            self.operations.append(op)
+            if len(op.affected_asteroids) == 0:
+                op.undo()
+            else:
+                self.operations.append(op)
+            self.upgrade_if_possible()
         if key == pygame.K_f:
             op = RefuelOperation(self, galaxy)
             op.execute()
-            self.operations.append(op)
-        if key == pygame.K_u:
-            op = UpgradeOperation(self)
-            op.execute()
-            self.operations.append(op)
+            if len(op.fuel) == 0:
+                op.undo()
+            else:
+                self.operations.append(op)
         if key == pygame.K_BACKSPACE and len(self.operations) > 1:
             op = self.operations.pop()
             op.undo()

@@ -140,11 +140,13 @@ class UpgradeOperation:
         self.ship.shoot_cost = 2
         self.ship.move_cost = 1
         self.ship.turn_cost = 0
+        self.ship.upgraded = True
     def undo(self):
         self.ship.score += 5
         self.ship.shoot_cost = 5
         self.ship.move_cost = 2
         self.ship.turn_cost = 1
+        self.ship.upgraded = False
     def engine_call(self):
         return "engine.p_upgrade();"
     def __str__(self):
