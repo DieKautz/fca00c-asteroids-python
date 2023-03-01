@@ -22,7 +22,7 @@ font = pygame.font.SysFont(None, 30)
 font_small = pygame.font.SysFont(None, 14)
 screen = pygame.display.set_mode((d_width, d_height))
 pygame.display.set_caption("FCA00C - Asteroid Game v" + version)
-pygame.mouse.set_visible(False)
+pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_CROSSHAIR)
 
 galaxy = {}
 for ast_x, ast_y in np.loadtxt("asteroids.txt", delimiter=',', dtype=int):
@@ -351,7 +351,7 @@ def game_loop():
         if helpers:
             ship.highlight_nearest_fuel()
             ship.highlight_nearest_asteroids()
-            
+
         if pygame.mouse.get_focused():
             (mouse_x, mouse_y) = pygame.mouse.get_pos()
             mouse_x = round((mouse_x + camera_x)/grid_size_px - 0.5)
