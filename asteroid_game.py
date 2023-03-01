@@ -90,7 +90,7 @@ def print_operations(operations):
     last_diry = 1
     from tkinter.filedialog import asksaveasfile
     f = asksaveasfile(defaultextension=".txt")
-    f.write("\n".join(list(map(lambda op: op.engine_call(), operations))))
+    f.write("\n".join(list(map(lambda op: op.engine_call(), operations[1:]))))
 
 class Ship:
     def apply_file(self, filename):
