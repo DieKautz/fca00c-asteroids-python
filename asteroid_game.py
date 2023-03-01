@@ -65,6 +65,10 @@ def draw_fuel(fuel_points):
     text = font.render(str(fuel_points), True, text_color)
     text_rect = text.get_rect(center=(d_width/2, d_height-10))
     screen.blit(text, text_rect)
+def draw_text_centered(text, x, y, color=text_color):
+    text = font.render(text, True, color)
+    text_rect = text.get_rect(center=((x+1)*grid_size_px - camera_x, (y+1)*grid_size_px - camera_y))
+    screen.blit(text, text_rect)
 
 def draw_asteroid(x, y, width=0):
     draw_circle(asteroid_color, x, y, width=width, radius=grid_size_px/2)
@@ -284,6 +288,8 @@ def game_loop():
             y += int(camera_y/grid_size_px)
             if x % 17 == 0 or y % 17 == 0:
                 draw_circle(grid_bold_color, x-0.5, y-0.5, 1)
+            if x % 17 == 8 and y % 17 == 8:
+                draw_text_centered("{:.0f}, {:.0f}".format((x-8)/17, (y-8)/17), x, y, [max(50, x-50) for x in background_color])
             if small_grid:
                 draw_circle(grid_color, x, y, 1)
 
@@ -302,8 +308,7 @@ def game_loop():
         ship.draw_tracers()
 
         draw_rect(text_color, mouse_x-.2, mouse_y-.2, w=grid_size_px*1.4, h=grid_size_px*1.4, width=1)
-        text_surface = font.render("{} {}".format((mouse_x, mouse_y), chebychev_distance(ship.x, ship.y, mouse_x, mouse_y)), True, text_color)
-        screen.blit(text_surface, ((mouse_x+1)*grid_size_px - camera_x, (mouse_y+1)*grid_size_px - camera_y))
+        draw_text_centered("{} {}".format((mouse_x, mouse_y), chebychev_distance(ship.x, ship.y, mouse_x, mouse_y)), mouse_x+1, mouse_y+1)
 
         text_surface = font.render(str(ship) + " cam_lock: {}".format(camera_follow), True, text_color)
         screen.blit(text_surface, (0,0))
